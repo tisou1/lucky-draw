@@ -1,4 +1,5 @@
 import type { ActivitySnapshot } from './types'
+import { DEFAULT_AUTO_STOP_SECONDS } from './defaults'
 
 function object(value: unknown, label: string): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label}格式错误`)
@@ -33,6 +34,11 @@ export function validateSnapshot(input: unknown): ActivitySnapshot {
   if (!Array.isArray(data.participants) || !Array.isArray(data.prizes) || !Array.isArray(data.records)) throw new Error('名单、奖项或记录格式错误')
   if (data.participants.length > 1000) throw new Error('参与者超过 1000 人上限')
   const settings = object(data.settings, '活动设置')
+  // Older version 1 databases and backups predate configurable stopping.
+  const drawMode = settings.drawMode === undefined ? 'auto' : settings.drawMode
+  const autoStopSeconds = settings.autoStopSeconds === undefined ? DEFAULT_AUTO_STOP_SECONDS : settings.autoStopSeconds
+  if (drawMode !== 'auto' && drawMode !== 'manual') throw new Error('抽奖停止方式无效')
+  integer(autoStopSeconds, '自动停止秒数（1–60 秒）', 1, 60)
   text(settings.name, '活动名称', 120)
   if (typeof settings.allowRepeat !== 'boolean' || typeof settings.force2D !== 'boolean' || !['sphere', 'helix'].includes(String(settings.layout)) || !['standard', 'low'].includes(String(settings.quality))) throw new Error('活动设置无效')
 
@@ -79,5 +85,5 @@ export function validateSnapshot(input: unknown): ActivitySnapshot {
     if (seen.size > prizes.get(prizeId)!) throw new Error('中奖人数超过奖项总名额')
     prizeWinners.set(prizeId, seen)
   }
-  return input as ActivitySnapshot
+  return { ...data, settings: { ...settings, drawMode, autoStopSeconds } } as unknown as ActivitySnapshot
 }

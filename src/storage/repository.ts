@@ -35,7 +35,7 @@ export class IndexedDBRepository implements StorageRepository {
   }
 
   async replace(snapshot: ActivitySnapshot, assets: Asset[] = [], clearAssets = false): Promise<void> {
-    validateSnapshot(snapshot)
+    snapshot = validateSnapshot(snapshot)
     await this.db.transaction('rw', this.db.tables, async () => {
       await Promise.all([this.db.participants.clear(), this.db.prizes.clear(), this.db.records.clear()])
       if (clearAssets) await this.db.assets.clear()

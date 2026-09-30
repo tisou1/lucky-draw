@@ -1,5 +1,7 @@
 import type { ActivitySnapshot, Participant } from './types'
 
+export const DEFAULT_AUTO_STOP_SECONDS = 5
+
 export function emptyActivity(): ActivitySnapshot {
   return {
     version: 1,
@@ -10,7 +12,7 @@ export function emptyActivity(): ActivitySnapshot {
       { id: 'prize-3', name: '三等奖', gift: '幸运礼物', total: 10, batchSize: 2, order: 2 },
     ],
     records: [],
-    settings: { name: '每一份期待，都值得被点亮', allowRepeat: false, layout: 'sphere', quality: 'standard', force2D: false },
+    settings: { name: '每一份期待，都值得被点亮', allowRepeat: false, drawMode: 'auto', autoStopSeconds: DEFAULT_AUTO_STOP_SECONDS, layout: 'sphere', quality: 'standard', force2D: false },
   }
 }
 

@@ -37,6 +37,8 @@ export interface DrawRecord {
 export interface ActivitySettings {
   name: string
   allowRepeat: boolean
+  drawMode: 'auto' | 'manual'
+  autoStopSeconds: number
   layout: 'sphere' | 'helix'
   quality: 'standard' | 'low'
   force2D: boolean

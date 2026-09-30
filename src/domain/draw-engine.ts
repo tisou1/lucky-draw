@@ -5,6 +5,7 @@ export class DrawEngine {
   state: DrawState = { phase: 'idle', record: null, error: null }
   private round: { prizeId: string; count: number } | null = null
   private writing = false
+  private stopTimer: ReturnType<typeof setTimeout> | null = null
   private readonly repository: StorageRepository
   private readonly getData: () => ActivitySnapshot
   private readonly change: (state: DrawState) => void
@@ -27,15 +28,28 @@ export class DrawEngine {
     this.change(this.state)
   }
 
+  private clearStopTimer() {
+    if (this.stopTimer !== null) clearTimeout(this.stopTimer)
+    this.stopTimer = null
+  }
+
   start(prizeId: string, count: number) {
     if (this.state.phase !== 'idle' && this.state.phase !== 'result') return
-    validateRound(this.getData(), prizeId, count)
+    const data = this.getData()
+    validateRound(data, prizeId, count)
+    this.clearStopTimer()
     this.round = { prizeId, count }
     this.update({ phase: 'rolling', record: null, error: null })
+    if (data.settings.drawMode === 'auto') {
+      this.stopTimer = setTimeout(() => {
+        void this.stop().catch(error => this.update({ error: error instanceof Error ? error.message : '自动停止失败，请手动停止重试' }))
+      }, data.settings.autoStopSeconds * 1000)
+    }
   }
 
   async stop() {
     if (this.state.phase !== 'rolling' || !this.round) return
+    this.clearStopTimer()
     // Reserve the exact result synchronously, before the first asynchronous write.
     const record = createRecord(this.getData(), this.round.prizeId, this.round.count)
     this.update({ phase: 'saving', record, error: null })
@@ -64,6 +78,7 @@ export class DrawEngine {
   }
 
   restore(record: DrawRecord | null) {
+    this.clearStopTimer()
     this.round = null
     this.update({ phase: record ? 'result' : 'idle', record, error: null })
   }

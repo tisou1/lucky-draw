@@ -20,6 +20,18 @@ describe('IndexedDB 活动事务', () => {
     await repo.replace(data)
     expect((await repo.load()).participants.map(p => p.id)).toEqual(data.participants.map(p => p.id))
   })
+  it('旧活动缺少停止配置时补默认值，并保留名单和中奖记录', async () => {
+    const data = { ...emptyActivity(), participants: demoParticipants(2) }
+    await repo.replace(data)
+    await repo.commitDraw(createRecord(data, 'prize-3', 1))
+    const original = await repo.load()
+    const legacy = structuredClone(original.settings)
+    Reflect.deleteProperty(legacy, 'drawMode')
+    Reflect.deleteProperty(legacy, 'autoStopSeconds')
+    await repo.db.settings.update('activity', { value: legacy })
+    expect(await repo.load()).toEqual(original)
+    expect((await repo.load()).settings).toMatchObject({ drawMode: 'auto', autoStopSeconds: 5 })
+  })
   it('结果提交幂等，刷新后恢复相同记录', async () => {
     const data = { ...emptyActivity(), participants: demoParticipants(10) }
     await repo.replace(data)

@@ -19,6 +19,8 @@ describe('完整 ZIP 备份', () => {
   it('备份恢复保留名单、奖项、规则、记录和图片', async () => {
     const data = { ...emptyActivity(), participants: demoParticipants(2) }
     data.settings.allowRepeat = true
+    data.settings.drawMode = 'manual'
+    data.settings.autoStopSeconds = 12
     data.participants[0].avatarId = 'avatar-1'; data.prizes[0].imageId = 'gift-1'
     const png = new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lV0AAAAASUVORK5CYII=', 'base64'))
     const assets = ['avatar-1', 'gift-1'].map(id => ({ id, blob: new Blob([png], { type: 'image/png' }) }))
@@ -39,6 +41,25 @@ describe('完整 ZIP 备份', () => {
     const original = { ...emptyActivity(), participants: demoParticipants(3) }
     await repo.replace(original)
     await expect(readBackup(new Blob(['broken zip']))).rejects.toThrow('ZIP')
+    expect(await repo.load()).toEqual(original)
+  })
+  it('旧备份缺少停止配置时采用默认自动停止，不修改原始清单', async () => {
+    const data = emptyActivity()
+    Reflect.deleteProperty(data.settings, 'drawMode')
+    Reflect.deleteProperty(data.settings, 'autoStopSeconds')
+    const restored = await readBackup(archive({ format: 'star-pick', version: 1, data, assets: [] }))
+    expect(restored.data.settings).toMatchObject({ drawMode: 'auto', autoStopSeconds: 5 })
+    expect(data.settings).not.toHaveProperty('drawMode')
+  })
+  it.each([
+    { drawMode: 'invalid' }, { drawMode: null },
+    { autoStopSeconds: 0 }, { autoStopSeconds: 61 }, { autoStopSeconds: 1.5 },
+    { autoStopSeconds: '5' }, { autoStopSeconds: null },
+  ])('拒绝无效抽奖停止配置 %j，并保留当前活动', async patch => {
+    const original = { ...emptyActivity(), participants: demoParticipants(2) }
+    await repo.replace(original)
+    const data = { ...original, settings: { ...original.settings, ...patch } }
+    await expect(readBackup(archive({ format: 'star-pick', version: 1, data, assets: [] }))).rejects.toThrow('停止')
     expect(await repo.load()).toEqual(original)
   })
   it('版本、重复编号和超过奖项名额的备份被拒绝', async () => {

@@ -9,6 +9,7 @@ import { drawEngine, mutateActivity, notify, safeAction, useActivity } from '@/s
 import { repository } from '@/storage/repository'
 import { downloadBlob } from '@/lib/download'
 import type { BackupBundle } from '@/storage/backup'
+import type { ActivitySettings } from '@/domain/types'
 
 export default function Settings() {
   const { data, writable, mutating, draw } = useActivity()
@@ -50,6 +51,7 @@ export default function Settings() {
         <form className="form-stack" onSubmit={e => { e.preventDefault(); if (name.trim()) void safeAction(async () => { await mutateActivity(d => ({ ...d, settings: { ...d.settings, name: name.trim() } })); notify('活动名称已保存') }) }}><Field label="活动名称"><Input value={name} onChange={e => setName(e.target.value)} maxLength={120} required disabled={locked} /></Field><div className="dialog-actions"><Button disabled={locked || !name.trim()}>保存名称</Button></div></form>
         <div className="setting-row"><div><strong>允许跨奖项重复中奖</strong><p>开启后可获得不同奖项，同一奖项仍只可中一次。</p></div><Switch checked={data.settings.allowRepeat} disabled={locked} onCheckedChange={value => update({ allowRepeat: value })} aria-label="允许跨奖项重复中奖" /></div>
       </section>
+      <DrawSettings key={`${data.settings.drawMode}:${data.settings.autoStopSeconds}`} settings={data.settings} locked={locked} />
       <section className="panel settings-panel"><div className="settings-title"><SparkleIcon /><h2>舞台表现</h2></div><div className="form-grid"><Field label="默认布局"><select value={data.settings.layout} disabled={locked} onChange={e => update({ layout: e.target.value as 'sphere' | 'helix' })}><option value="sphere">3D 球体</option><option value="helix">3D 螺旋</option></select></Field><Field label="画质"><select value={data.settings.quality} disabled={locked} onChange={e => update({ quality: e.target.value as 'standard' | 'low' })}><option value="standard">标准 · 最多 300 张卡片</option><option value="low">低画质 · 最多 120 张卡片</option></select></Field></div><div className="setting-row"><div><strong>使用 2D 卡片舞台</strong><p>适合图形性能有限的设备，抽奖规则保持一致。</p></div><Switch checked={data.settings.force2D} disabled={locked} onCheckedChange={value => update({ force2D: value })} aria-label="使用 2D 卡片舞台" /></div><p className="settings-note">系统启用减少动态效果时，舞台会减少持续旋转和庆祝动画。</p></section>
       <section className="panel settings-panel"><div className="settings-title"><RotateCcw size={19} /><h2>开始下一场</h2></div><div className="setting-row"><div><strong>清空中奖记录</strong><p>保留名单、头像、奖项和设置，重新开始抽奖。</p></div><Button variant="outline" disabled={locked || !data.records.length} onClick={() => setConfirm('records')}>清空记录</Button></div><div className="setting-row"><div><strong>重置整个活动</strong><p>删除名单、图片和记录，恢复默认奖项与设置。</p></div><Button variant="destructive" disabled={locked} onClick={() => setConfirm('reset')}>重置活动</Button></div></section>
     </div><aside className="settings-stack">
@@ -67,6 +69,27 @@ export default function Settings() {
       setName(pendingBackup.data.settings.name)
       notify('活动与图片已恢复')
     }} />
+  </section>
+}
+
+function DrawSettings({ settings, locked }: { settings: ActivitySettings; locked: boolean }) {
+  const [mode, setMode] = useState(settings.drawMode)
+  const [seconds, setSeconds] = useState(String(settings.autoStopSeconds))
+  const save = () => void safeAction(async () => {
+    await mutateActivity(data => ({ ...data, settings: { ...data.settings, drawMode: mode, autoStopSeconds: mode === 'auto' ? Number(seconds) : data.settings.autoStopSeconds } }))
+    notify('抽奖停止配置已保存')
+  })
+
+  return <section className="panel settings-panel">
+    <div className="settings-title"><Settings2 size={19} /><h2>抽奖停止方式</h2></div>
+    <form className="form-stack" onSubmit={event => { event.preventDefault(); save() }}>
+      <div className="form-grid">
+        <Field label="停止方式"><select value={mode} disabled={locked} onChange={event => setMode(event.target.value as ActivitySettings['drawMode'])}><option value="auto">自动停止</option><option value="manual">手动停止</option></select></Field>
+        <Field label="自动停止时间（1–60 秒）"><Input type="number" min={1} max={60} step={1} required value={seconds} disabled={locked || mode === 'manual'} onChange={event => setSeconds(event.target.value)} /></Field>
+      </div>
+      <p className="settings-note">自动模式会在设定时间后停止并揭晓，也可提前点击停止或按空格。手动模式等待你操作停止。</p>
+      <div className="dialog-actions"><Button disabled={locked}>保存抽奖配置</Button></div>
+    </form>
   </section>
 }
 
