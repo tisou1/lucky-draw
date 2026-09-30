@@ -16,7 +16,7 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const sheet = sheets[sheetIndex]
-  const preview = useMemo(() => sheet && mapping.name >= 0 ? prepareImport(sheet.rows, mapping, participants) : null, [sheet, mapping, participants])
+  const preview = useMemo(() => sheet && mapping.name >= 0 ? prepareImport(sheet.rows, mapping, participants, sheet.rowNumbers) : null, [sheet, mapping, participants])
 
   const read = async (nextFile: File, nextEncoding = encoding) => {
     setBusy(true); setError(''); setFile(nextFile); setSheets([])
@@ -35,7 +35,7 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
       let imported = 0
       let skipped = 0
       await mutateActivity(data => {
-        const result = prepareImport(sheet.rows, mapping, data.participants)
+        const result = prepareImport(sheet.rows, mapping, data.participants, sheet.rowNumbers)
         imported = result.participants.length; skipped = result.issues.length
         if (!imported) throw new Error('没有有效名单可以导入，请检查列映射和编号')
         return { ...data, participants: [...data.participants, ...result.participants] }

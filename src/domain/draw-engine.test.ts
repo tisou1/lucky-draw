@@ -5,7 +5,7 @@ import type { StorageRepository } from './types'
 
 function setup(commitDraw = vi.fn(async () => {})) {
   const data = { ...emptyActivity(), participants: demoParticipants(10) }
-  const repository: StorageRepository = { load: async () => data, replace: async () => {}, commitDraw, getAsset: async () => undefined, getAssets: async () => [] }
+  const repository: StorageRepository = { load: async () => data, replace: async () => {}, commitDraw, getAsset: async () => undefined, getAssets: async () => [], loadBundle: async () => ({ data, assets: [] }) }
   const committed = vi.fn()
   const engine = new DrawEngine(repository, () => data, () => {}, committed)
   return { engine, repository, committed }

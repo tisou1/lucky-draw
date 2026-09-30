@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import { emptyActivity } from '@/domain/defaults'
 import { candidatePool, awardedCount } from '@/domain/lottery'
+import { assetReferences, validateSnapshot } from '@/domain/validation'
 import type { ActivitySettings, ActivitySnapshot, Asset, DrawRecord, Participant, Prize, StorageRepository } from '@/domain/types'
 
 class ActivityDatabase extends Dexie {
@@ -8,7 +9,7 @@ class ActivityDatabase extends Dexie {
   prizes!: Table<Prize, string>
   records!: Table<DrawRecord, string>
   assets!: Table<Asset, string>
-  settings!: Table<{ id: string; value: ActivitySettings }, string>
+  settings!: Table<{ id: string; value: ActivitySettings; participantOrder?: string[] }, string>
 
   constructor(name: string) {
     super(name)
@@ -27,19 +28,25 @@ export class IndexedDBRepository implements StorageRepository {
       const [participants, prizes, records] = await Promise.all([
         this.db.participants.toArray(), this.db.prizes.orderBy('order').toArray(), this.db.records.orderBy('createdAt').toArray(),
       ])
-      return { version: 1, participants, prizes, records, settings: settings.value }
+      const order = new Map(settings.participantOrder?.map((id, i) => [id, i]))
+      participants.sort((a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.code.localeCompare(b.code))
+      return validateSnapshot({ version: 1, participants, prizes, records, settings: settings.value })
     })
   }
 
   async replace(snapshot: ActivitySnapshot, assets: Asset[] = [], clearAssets = false): Promise<void> {
+    validateSnapshot(snapshot)
     await this.db.transaction('rw', this.db.tables, async () => {
       await Promise.all([this.db.participants.clear(), this.db.prizes.clear(), this.db.records.clear()])
       if (clearAssets) await this.db.assets.clear()
       await this.db.participants.bulkAdd(snapshot.participants)
       await this.db.prizes.bulkAdd(snapshot.prizes)
       await this.db.records.bulkAdd(snapshot.records)
-      await this.db.settings.put({ id: 'activity', value: snapshot.settings })
+      await this.db.settings.put({ id: 'activity', value: snapshot.settings, participantOrder: snapshot.participants.map(p => p.id) })
       if (assets.length) await this.db.assets.bulkPut(assets)
+      for (const id of assetReferences(snapshot)) {
+        if (!(await this.db.assets.get(id))) throw new Error('图片资源缺失，活动未保存')
+      }
       // Retain assets referenced by historical snapshots, collect everything else.
       const referenced = new Set([
         ...snapshot.participants.map(p => p.avatarId), ...snapshot.prizes.map(p => p.imageId),
@@ -68,6 +75,9 @@ export class IndexedDBRepository implements StorageRepository {
 
   async getAsset(id: string) { return this.db.assets.get(id) }
   async getAssets() { return this.db.assets.toArray() }
+  async loadBundle() {
+    return this.db.transaction('r', this.db.tables, async () => ({ data: await this.load(), assets: await this.getAssets() }))
+  }
 }
 
 export const repository = new IndexedDBRepository()

@@ -61,6 +61,7 @@ export interface StorageRepository {
   commitDraw(record: DrawRecord): Promise<void>
   getAsset(id: string): Promise<Asset | undefined>
   getAssets(): Promise<Asset[]>
+  loadBundle(): Promise<{ data: ActivitySnapshot; assets: Asset[] }>
 }
 
 export type DrawPhase = 'idle' | 'rolling' | 'saving' | 'revealing' | 'result'

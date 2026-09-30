@@ -20,11 +20,12 @@ export async function readExcelSheets(buffer: ArrayBuffer): Promise<ImportSheet[
   return workbook.worksheets.filter(s => s.state === 'visible' && s.actualRowCount > 0).map(sheet => {
     if (sheet.rowCount > 10000 || sheet.columnCount > 200) throw new Error('表格范围过大，请仅保留名单区域后重新导入')
     const rows: string[][] = []
+    const rowNumbers: number[] = []
     for (let i = 1; i <= sheet.rowCount; i++) {
       const row = sheet.getRow(i)
       const values = Array.from({ length: sheet.columnCount }, (_, col) => excelCellText(row.getCell(col + 1)))
-      if (values.some(v => v.trim())) rows.push(values)
+      if (values.some(v => v.trim())) { rows.push(values); rowNumbers.push(i) }
     }
-    return { name: sheet.name, rows }
+    return { name: sheet.name, rows, rowNumbers }
   })
 }

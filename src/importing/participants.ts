@@ -1,14 +1,16 @@
 import Papa from 'papaparse'
 import type { Participant } from '@/domain/types'
 
-export interface ImportSheet { name: string; rows: string[][] }
+export interface ImportSheet { name: string; rows: string[][]; rowNumbers?: number[] }
 export interface ColumnMapping { code: number; name: number; department: number; note: number }
 export interface ImportIssue { row: number; message: string }
 
 export function parseCSV(text: string): ImportSheet[] {
-  const result = Papa.parse<string[]>(text.replace(/^\uFEFF/, ''), { skipEmptyLines: 'greedy', dynamicTyping: false })
-  if (result.errors.length) throw new Error(`CSV 第 ${Number(result.errors[0].row ?? 0) + 1} 行：${result.errors[0].message}`)
-  return [{ name: 'CSV 名单', rows: result.data }]
+  const result = Papa.parse<string[]>(text.replace(/^\uFEFF/, ''), { skipEmptyLines: false, dynamicTyping: false })
+  const error = result.errors.find(e => e.code !== 'UndetectableDelimiter')
+  if (error) throw new Error(`CSV 第 ${Number(error.row ?? 0) + 1} 行：${error.message}`)
+  const first = Math.max(0, result.data.findIndex(row => row.some(v => v.trim())))
+  return [{ name: 'CSV 名单', rows: result.data.slice(first), rowNumbers: result.data.slice(first).map((_, i) => first + i + 1) }]
 }
 
 export async function readParticipantFile(file: File, encoding = 'utf-8'): Promise<ImportSheet[]> {
@@ -31,18 +33,23 @@ export function guessMapping(headers: string[]): ColumnMapping {
   }
 }
 
-export function prepareImport(rows: string[][], mapping: ColumnMapping, existing: Participant[]) {
+export function prepareImport(rows: string[][], mapping: ColumnMapping, existing: Participant[], rowNumbers?: number[]) {
   if (mapping.name < 0) throw new Error('请映射姓名列')
   const codes = new Set(existing.map(p => p.code))
   const participants: Participant[] = []
   const issues: ImportIssue[] = []
   rows.slice(1).forEach((row, i) => {
+    if (row.every(v => !v.trim())) return
+    const line = rowNumbers?.[i + 1] ?? i + 2
     const value = (index: number) => index < 0 ? '' : (row[index] ?? '').trim()
     const name = value(mapping.name)
-    if (!name) { issues.push({ row: i + 2, message: '姓名为空，已跳过' }); return }
+    if (!name) { issues.push({ row: line, message: '姓名为空，已跳过' }); return }
     const code = value(mapping.code) || `P-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
-    if (codes.has(code)) { issues.push({ row: i + 2, message: `编号 ${code} 重复，已跳过` }); return }
-    if (existing.length + participants.length >= 1000) { issues.push({ row: i + 2, message: '超过 1000 人上限，已跳过' }); return }
+    if (name.length > 80 || code.length > 80 || value(mapping.department).length > 100 || value(mapping.note).length > 300) {
+      issues.push({ row: line, message: '字段过长，姓名和编号最多 80 字、部门 100 字、备注 300 字' }); return
+    }
+    if (codes.has(code)) { issues.push({ row: line, message: `编号 ${code} 重复，已跳过` }); return }
+    if (existing.length + participants.length >= 1000) { issues.push({ row: line, message: '超过 1000 人上限，已跳过' }); return }
     codes.add(code)
     participants.push({ id: crypto.randomUUID(), code, name, department: value(mapping.department), note: value(mapping.note) })
   })
