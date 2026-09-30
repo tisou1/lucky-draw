@@ -3,14 +3,21 @@ import { Orbit, Users, Gift, History, Settings2, X, LoaderCircle } from 'lucide-
 import { Button } from '@/components/ui/button'
 import Participants from '@/components/Participants'
 import Prizes from '@/components/Prizes'
-import { initializeActivity, notify, subscribeChanges, useActivity } from '@/store/activity'
+import Records from '@/components/Records'
+import Stage from '@/components/Stage'
+import { drawEngine, initializeActivity, notify, subscribeChanges, useActivity } from '@/store/activity'
 import { acquireOperatorLock } from '@/storage/operator-lock'
 import '@/styles/app.css'
 
 export default function App() {
   const [view, setView] = useState('stage')
   const [lockAttempt, setLockAttempt] = useState(0)
-  const { ready, writable, mutating, notice } = useActivity()
+  const { ready, writable, mutating, notice, draw } = useActivity()
+  useEffect(() => {
+    if (draw.phase !== 'revealing') return
+    const timeout = setTimeout(() => drawEngine.finishReveal(), 1100)
+    return () => clearTimeout(timeout)
+  }, [draw.phase])
   useEffect(() => {
     let alive = true
     let unlock = () => {}
@@ -42,8 +49,9 @@ export default function App() {
     {!ready ? <div className="app-loading"><LoaderCircle className="spin" size={30} /><p>正在准备本地舞台…</p><Button variant="outline" onClick={() => setLockAttempt(v => v + 1)}>重新读取</Button></div> : <>
       {view === 'participants' && <Participants />}
       {view === 'prizes' && <Prizes />}
-      {view === 'stage' && <section className="empty-state"><Orbit size={48} /><h1>每一份期待，都值得被点亮</h1><p>先准备参与者名单和奖项，让舞台等待幸运降临。</p><Button onClick={() => setView('participants')}>准备参与者名单</Button></section>}
-      {(view === 'records' || view === 'settings') && <section className="empty-state"><p>正在构建活动管理模块</p></section>}
+      {view === 'stage' && <Stage onParticipants={() => setView('participants')} />}
+      {view === 'records' && <Records />}
+      {view === 'settings' && <section className="empty-state"><p>正在构建活动管理模块</p></section>}
     </>}
     {notice && <div className="notice" role="status"><span>{notice}</span><Button variant="ghost" size="icon-sm" aria-label="关闭提示" onClick={() => notify(null)}><X /></Button></div>}
   </div>
