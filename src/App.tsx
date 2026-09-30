@@ -5,6 +5,7 @@ import Participants from '@/components/Participants'
 import Prizes from '@/components/Prizes'
 import Records from '@/components/Records'
 import Stage from '@/components/Stage'
+import SceneLayer from '@/scene/SceneLayer'
 import { drawEngine, initializeActivity, notify, subscribeChanges, useActivity } from '@/store/activity'
 import { acquireOperatorLock } from '@/storage/operator-lock'
 import '@/styles/app.css'
@@ -49,7 +50,7 @@ export default function App() {
     {!ready ? <div className="app-loading"><LoaderCircle className="spin" size={30} /><p>正在准备本地舞台…</p><Button variant="outline" onClick={() => setLockAttempt(v => v + 1)}>重新读取</Button></div> : <>
       {view === 'participants' && <Participants />}
       {view === 'prizes' && <Prizes />}
-      {view === 'stage' && <Stage onParticipants={() => setView('participants')} />}
+      {view === 'stage' && <Stage onParticipants={() => setView('participants')} scene={<SceneLayer />} />}
       {view === 'records' && <Records />}
       {view === 'settings' && <section className="empty-state"><p>正在构建活动管理模块</p></section>}
     </>}

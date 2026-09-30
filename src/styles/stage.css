@@ -95,6 +95,18 @@ kbd { border: 1px solid #3a4c64; border-radius: 3px; padding: 2px 5px; font: 8px
 @keyframes winner-enter { from { opacity: 0; transform: translateY(30px) scale(.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes confetti-fall { 10% { opacity: 1; } 100% { opacity: 0; transform: translate(40px, 550px) rotate(430deg); } }
 .record-list { display: grid; gap: 18px; }
+.fallback-scene { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.fallback-ring { position: absolute; width: 85%; aspect-ratio: 1; border-radius: 50%; border: 1px solid #5085a444; box-shadow: 0 0 50px #598bd80a, inset 0 0 50px #598bd80a; }
+.fallback-ring::after { content: ''; position: absolute; inset: -25px; border: 1px solid #6c679b30; border-radius: 50%; }
+.fallback-cards { width: 90%; height: 80%; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; align-content: center; transform: rotate(-6deg); opacity: .65; mask-image: radial-gradient(ellipse, black 40%, transparent 74%); animation: card-drift 18s ease-in-out infinite alternate; }
+.fallback-card { border: 1px solid #40718370; border-radius: 7px; padding: 9px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: linear-gradient(130deg, #203c54, #12283c); min-width: 0; }
+.fallback-card .asset-image, .fallback-card .avatar-placeholder { width: 27px; height: 27px; border-radius: 7px; font-size: 8px; }
+.fallback-card strong { font-size: 8px; font-weight: 400; overflow: hidden; white-space: nowrap; max-width: 100%; }
+.fallback-card small { font-size: 6px; max-width: 100%; overflow: hidden; white-space: nowrap; }
+.fallback-badge { position: absolute; bottom: 43px; right: 20px; color: #5d86a4; font-size: 8px; }
+.fallback-scene.rolling .fallback-cards { animation-duration: 800ms; }
+.fallback-scene.motion-paused .fallback-cards { animation-play-state: paused; }
+@keyframes card-drift { from { transform: rotate(-6deg) translateY(-15px); } to { transform: rotate(4deg) translateY(15px); } }
 .record-panel { padding: 24px; }
 .record-heading { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #2a3853; padding-bottom: 20px; }
 .record-title { display: flex; align-items: center; gap: 14px; }
