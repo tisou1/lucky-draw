@@ -42,7 +42,7 @@ export default function App() {
   return <div className="app-shell">
     <header className="app-header">
       <button className="brand" onClick={() => setView('stage')} aria-label="星选，回到抽奖舞台">
-        <svg className="brand-mark" viewBox="0 0 40 40" fill="none"><path d="M20 2L24 16L38 20L24 24L20 38L16 24L2 20L16 16Z" fill="currentColor" /><path d="M31 4L33 10L39 12L33 14L31 20L29 14L23 12L29 10Z" fill="currentColor" opacity=".45" /></svg><div><strong>星选</strong><span>STAR PICK</span></div>
+        <svg className="brand-mark" viewBox="0 0 40 40" fill="none"><path d="M20 2L24 16L38 20L24 24L20 38L16 24L2 20L16 16Z" fill="currentColor" /><path d="M31 4L33 10L39 12L33 14L31 20L29 14L23 12L29 10Z" fill="currentColor" opacity=".45" /></svg><div><strong>星选</strong><span>现场抽奖</span></div>
       </button>
       <nav className="app-nav" aria-label="主导航">{tabs.map(tab => <button key={tab.id} className={view === tab.id ? 'active' : ''} aria-current={view === tab.id ? 'page' : undefined} onClick={() => setView(tab.id)}><tab.icon size={16} />{tab.label}</button>)}</nav>
       <div className="header-status"><span className="saved-label">{mutating ? '正在保存…' : writable ? '本地已就绪' : '只读模式'}</span><Button variant={view === 'settings' ? 'secondary' : 'ghost'} size="icon" aria-label="活动设置" onClick={() => setView('settings')}><Settings2 /></Button></div>

@@ -18,22 +18,20 @@ export async function buildAtlas(participants: Participant[], signal: AbortSigna
     const x = (i % ATLAS_COLUMNS) * TILE_WIDTH
     const y = Math.floor(i / ATLAS_COLUMNS) * TILE_HEIGHT
     context.save(); context.translate(x, y)
-    const gradient = context.createLinearGradient(0, 0, 128, 160)
-    gradient.addColorStop(0, '#244a61'); gradient.addColorStop(1, '#10263c')
-    context.fillStyle = gradient
-    context.beginPath(); context.roundRect(3, 3, 122, 154, 10); context.fill()
-    context.strokeStyle = '#639faf'; context.lineWidth = 1
+    context.fillStyle = '#dfded8'
+    context.beginPath(); context.roundRect(3, 3, 122, 154, 4); context.fill()
+    context.strokeStyle = '#87877f'; context.lineWidth = 1
     context.stroke()
     context.fillStyle = avatarColor(p.name)
     context.beginPath(); context.roundRect(40, 18, 48, 48, 12); context.fill()
     context.textAlign = 'center'
-    context.fillStyle = '#e0f7ff'; context.font = '500 19px "Microsoft YaHei", sans-serif'
+    context.fillStyle = '#fafaf7'; context.font = '500 19px "Microsoft YaHei", sans-serif'
     context.fillText(p.name.slice(-2), 64, 49)
-    context.font = '500 14px "Microsoft YaHei", sans-serif'
+    context.fillStyle = '#242424'; context.font = '600 14px "Microsoft YaHei", sans-serif'
     context.fillText(p.name.length > 7 ? p.name.slice(0, 6) + '…' : p.name, 64, 96, 114)
-    context.fillStyle = '#8db4c7'; context.font = '10px "Microsoft YaHei", sans-serif'
+    context.fillStyle = '#55554f'; context.font = '10px "Microsoft YaHei", sans-serif'
     context.fillText(p.department.slice(0, 9) || '幸运参与者', 64, 116, 110)
-    context.fillStyle = '#5887a2'; context.font = '8px Consolas, monospace'
+    context.fillStyle = '#73736d'; context.font = '8px Consolas, monospace'
     context.fillText(p.code.slice(0, 16), 64, 142, 110)
     context.restore()
   }

@@ -46,10 +46,10 @@ export default function Prizes() {
   const [editor, setEditor] = useState<{ prize: Prize | null } | null>(null)
   const [deleting, setDeleting] = useState<Prize | null>(null)
   return <section className="management-page">
-    <PageHead eyebrow="PRIZE COLLECTION" title="为幸运，准备一份惊喜" description="设置奖项与名额，每一次揭晓都有不同的期待。"><Button disabled={locked} onClick={() => setEditor({ prize: null })}><Plus />添加奖项</Button></PageHead>
+    <PageHead title="奖项设置" description="配置奖品、名额及每轮抽取人数。"><Button disabled={locked} onClick={() => setEditor({ prize: null })}><Plus />添加奖项</Button></PageHead>
     <div className="prize-grid">{data.prizes.map((p, i) => { const awarded = awardedCount(data.records, p.id); return <article className={`prize-card prize-tone-${i % 3}`} key={p.id}>
-      <div className="prize-card-top"><span className="eyebrow">PRIZE {String(i + 1).padStart(2, '0')}</span><span className="status-pill">{p.total - awarded ? '待揭晓' : '已抽完'}</span></div>
-      <div className="prize-art">{p.imageId ? <AssetImage id={p.imageId} name={p.gift} /> : <><div className="gift-halo" /><Gift size={64} strokeWidth={1} /></>}</div>
+      <div className="prize-card-top"><span className="eyebrow">奖项 {String(i + 1).padStart(2, '0')}</span><span className="status-pill">{p.total - awarded ? '待揭晓' : '已抽完'}</span></div>
+      <div className="prize-art">{p.imageId ? <AssetImage id={p.imageId} name={p.gift} /> : <><Gift size={64} strokeWidth={1} /></>}</div>
       <h2>{p.name}</h2><p>{p.gift}</p><div className="prize-count"><strong>{p.total - awarded}<small> / {p.total}</small></strong><span>剩余名额</span></div>
       <div className="progress-track"><span style={{ width: `${awarded / p.total * 100}%` }} /></div>
       <div className="prize-card-footer"><span>每轮 {p.batchSize} 人</span><div className="row-actions"><Button variant="ghost" size="icon" aria-label={`编辑${p.name}`} disabled={locked} onClick={() => setEditor({ prize: p })}><Pencil /></Button><Button variant="ghost" size="icon" aria-label={`删除${p.name}`} disabled={locked || awarded > 0} onClick={() => setDeleting(p)}><Trash2 /></Button></div></div>

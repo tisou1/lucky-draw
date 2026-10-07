@@ -119,11 +119,9 @@ function Environment({ quality, reduced, onFailure }: Pick<Props, 'quality' | 'r
   }, [gl, onFailure])
   useFrame((_, delta) => { if (orbit.current && !reduced) orbit.current.rotation.y += Math.min(delta, 0.05) * 0.03 })
   return <>
-    <Sparkles count={quality === 'low' ? 100 : 360} scale={[9, 7, 7]} size={1.4} speed={reduced ? 0 : 0.12} opacity={0.42} color="#98e9ef" />
+    <Sparkles count={quality === 'low' ? 32 : 96} scale={[9, 7, 7]} size={1.4} speed={reduced ? 0 : 0.12} opacity={0.22} color="#e2e1db" />
     <group ref={orbit}>
-      <mesh rotation={[1.13, 0.18, 0.35]}><torusGeometry args={[3.0, 0.006, 3, 160]} /><meshBasicMaterial color="#57aeca" transparent opacity={0.32} /></mesh>
-      <mesh rotation={[1.63, -0.3, -0.43]}><torusGeometry args={[3.25, 0.003, 3, 160]} /><meshBasicMaterial color="#847cbf" transparent opacity={0.26} /></mesh>
-      <mesh rotation={[0.75, 0.2, -0.5]}><torusGeometry args={[3.43, 0.003, 3, 160]} /><meshBasicMaterial color="#74b2c4" transparent opacity={0.13} /></mesh>
+      <mesh rotation={[1.13, 0.18, 0.35]}><torusGeometry args={[3.0, 0.006, 3, 160]} /><meshBasicMaterial color="#cfcec7" transparent opacity={0.16} /></mesh>
     </group>
   </>
 }

@@ -1,6 +1,6 @@
 import type { Asset } from '@/domain/types'
 
-const palette = ['#217e9d', '#6561ba', '#287e7a', '#aa6386', '#527fa9', '#927245']
+const palette = ['#42413d', '#404244', '#454242', '#363b39', '#3e3e47', '#424034']
 export function avatarColor(name: string) {
   const hash = [...name].reduce((value, c) => value + c.charCodeAt(0), 0)
   return palette[hash % palette.length]

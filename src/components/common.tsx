@@ -39,6 +39,6 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
   return <div className="pagination"><span>第 {page + 1} / {Math.max(1, pages)} 页</span><Button variant="outline" size="icon" aria-label="上一页" disabled={page <= 0} onClick={() => onChange(page - 1)}><ChevronLeft /></Button><Button variant="outline" size="icon" aria-label="下一页" disabled={page >= pages - 1} onClick={() => onChange(page + 1)}><ChevronRight /></Button></div>
 }
 
-export function PageHead({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
-  return <header className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p className="muted">{description}</p></div><div className="page-actions">{children}</div></header>
+export function PageHead({ title, description, children }: { title: string; description: string; children?: ReactNode }) {
+  return <header className="page-heading"><div><h1>{title}</h1><p className="muted">{description}</p></div><div className="page-actions">{children}</div></header>
 }
